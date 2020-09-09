@@ -1,0 +1,25 @@
+---
+- name: Download and install jenkins
+  hosts: "{{ihosts}}"
+  tasks:
+
+    - name: Install jdk 1.8 if not exist
+      yum:
+        name: java-1.8.0-openjdk.x86_64
+        state: present
+
+    - name: Download Jenkins
+      get_url:
+        url: http://mirrors.jenkins.io/war-stable/latest/jenkins.war
+        dest: /home/jenkins.war
+    
+    - name: Open port 8080 in firewall temporary
+      firewalld:
+        port: 8080/tcp
+        permanent: no
+        state: enabled
+
+    - name: Run jenkins on port 8080
+      shell: "(java -jar /home/jenkins.war --httpPort=8080 &)"
+      async: 10
+      poll: 0

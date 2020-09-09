@@ -1,0 +1,176 @@
+- name: Installing epel-release
+  yum:
+    name: epel-release
+    state: present
+
+- name: Install remi repo.
+  yum:
+    name: http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
+    state: present
+
+
+- name: installing php fpm packages
+  yum:
+    name: "{{item}}"
+    state: present
+  loop:
+    - php{{version}}
+    - php{{version}}-php-common
+    - php{{version}}-php-fpm
+    - php{{version}}-php-mysql
+    - php{{version}}-php-pecl-memcache
+    - php{{version}}-php-pecl-memcached
+    - php{{version}}-php-gd
+    - php{{version}}-php-mbstring
+    - php{{version}}-php-mcrypt
+    - php{{version}}-php-xml
+    - php{{version}}-php-pecl-apc
+    - php{{version}}-php-pear
+    - php{{version}}-php-pdo
+    - php{{version}}-php-intl
+    - php{{version}}-php-zip
+    - php{{version}}-php-pgsql
+    - php{{version}}-php-iconv
+    - php{{version}}-php-cli
+    - php{{version}}-php-curl
+    - php{{version}}-php-openssl
+    - php{{version}}-php-tokenizer
+    - php{{version}}-php-xmlrpc
+    - php{{version}}-php-soap
+    - php{{version}}-php-ctype
+    - php{{version}}-php-simplexml
+    - php{{version}}-php-spl
+    - php{{version}}-php-pcre
+    - php{{version}}-php-dom
+    - php{{version}}-php-json
+    - php{{version}}-php-pecl-redis
+    - php{{version}}-php-redis
+    - php{{version}}-php-opcache
+    - php-redis
+
+
+- name: replace user = apache with user = nginx
+  lineinfile:
+    path: /etc/opt/remi/php{{version}}/php-fpm.d/www.conf
+    regexp: '^user = apache'
+    state: present
+    backrefs: yes
+    line: 'user = nginx'
+
+- name: replace group = apache with group = nginx
+  lineinfile:
+    path: /etc/opt/remi/php{{version}}/php-fpm.d/www.conf
+    regexp: '^group = apache'
+    line: 'group = nginx'
+    backrefs: yes
+
+
+
+
+#85 = average memory usage in MiBs for php-fpm process
+- name: change pm.max_children RAM > 4096
+  lineinfile:
+    path: /etc/opt/remi/php{{version}}/php-fpm.d/www.conf
+    regexp: '(^;*pm.max_children = -*\d+)'
+    #line: 'pm.max_children = {{  50 if (serverRamMBs <= 4096) else (( serverRamMBs | int - 2048)/85) | int }}'
+    line: 'pm.max_children = {{  ((serverRamMBs | int - 2048)/85) | int }}'
+  when: serverRamMBs | int > 4096
+
+- name: change pm.max_children RAM <= 4096
+  lineinfile:
+    path: /etc/opt/remi/php{{version}}/php-fpm.d/www.conf
+    regexp: '(^;*pm.max_children = -*\d+)'
+    #line: 'pm.max_children = {{  50 if (serverRamMBs <= 4096) else (( serverRamMBs | int - 2048)/85) | int }}'
+    line: 'pm.max_children = 50'
+  when: serverRamMBs | int <= 4096
+
+
+
+
+- name: replace post_max_size=8M to post_max_size=1024M
+  lineinfile:
+    path: /etc/opt/remi/php{{version}}/php.ini
+    regexp: '^;*post_max_size = \d+M'
+    line: 'post_max_size = 1024M'
+
+- name: replace upload_max_filesize = 2M to upload_max_filesize = 1024M
+  lineinfile:
+    path: /etc/opt/remi/php{{version}}/php.ini
+    regexp: '^;*upload_max_filesize = \d+M'
+    line: 'upload_max_filesize = 1024M'
+
+- name: replace upload_max_filesize = 2M to upload_max_filesize = 1024M
+  lineinfile:
+    path: /etc/opt/remi/php{{version}}/php.ini
+    regexp: '^;*max_execution_time = \d+'
+    line: 'max_execution_time = 600'
+
+
+
+
+
+
+
+
+
+
+
+
+
+#- name: add /var/log/php-fpm/www-slow.log
+#  lineinfile:
+#    path: /etc/opt/remi/php{{version}}/php-fpm.d/www.conf
+#    line: 'slowlog = /var/log/php-fpm/www-slow.log'
+
+- name: request_slowlog_timeout = 5s in www.conf
+  lineinfile:
+    path: /etc/opt/remi/php{{version}}/php-fpm.d/www.conf
+    line: 'request_slowlog_timeout = 5s'
+
+
+- name: pm.start_servers = 20
+  lineinfile:
+    path: /etc/opt/remi/php{{version}}/php-fpm.d/www.conf
+    regexp: '^;*pm.start_servers = \d+'
+    line: 'pm.start_servers = 20'
+
+
+- name: pm.min_spare_servers = 20
+  lineinfile:
+    path: /etc/opt/remi/php{{version}}/php-fpm.d/www.conf
+    regexp: '^;*pm.min_spare_servers = \d+'
+    line: 'pm.min_spare_servers = 20'
+
+
+- name: pm.max_spare_servers = 35
+  lineinfile:
+    path: /etc/opt/remi/php{{version}}/php-fpm.d/www.conf
+    regexp: '^;*pm.max_spare_servers = \d+'
+    line: 'pm.max_spare_servers = 35'
+
+
+- name: pm.max_requests = 500
+  lineinfile:
+    path: /etc/opt/remi/php{{version}}/php-fpm.d/www.conf
+    regexp: '^;*pm.max_requests = \d+'
+    line: 'pm.max_requests = 500'
+
+
+- name: security.limit_extensions = .php
+  lineinfile:
+    path: /etc/opt/remi/php{{version}}/php-fpm.d/www.conf
+    #regexp: '^;security.limit_extensions ='
+    insertafter: ';security.limit_extensions ='
+    line: 'security.limit_extensions = .php'
+
+
+
+
+
+
+- name: starting and enabling fpm service
+  service:
+    state: started
+    enabled: true
+    name: php{{version}}-php-fpm
+

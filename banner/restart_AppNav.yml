@@ -1,0 +1,8 @@
+---
+- name: Playbook to restart AppNav service
+  hosts: "{{ihosts}}"
+  tasks:
+    - name: Changing Directory to /u01/app/tomcat/MUSTBILD/bildtomcat01
+      shell:
+        cmd: bin/shutdown.sh && sleep 5 && bin/startup.sh
+        chdir: /u01/app/tomcat/MUSTBILD/bildtomcat01

@@ -1,0 +1,103 @@
+# {{ ansible_managed }} 
+
+
+
+<VirtualHost *:80> 
+
+    ServerName {{hostname}} 
+
+    ServerAdmin admin@{{hostname}}
+
+    DocumentRoot /var/www/html/{{os_user}}/www 
+
+    ScriptAlias /cgi-bin/ "/var/www/cgi-bin/" 
+
+    <Directory "/var/www/html/{{os_user}}/www"> 
+
+            Options +Indexes +FollowSymLinks +ExecCGI 
+
+            AddHandler php-fastcgi .php 
+
+            Action php-fastcgi /cgi-bin/php.fastcgi 
+
+            AllowOverride All 
+
+            Order allow,deny 
+
+            Allow from All 
+
+    </Directory> 
+
+    ProxyPassMatch ^/(.*\.php(/.*)?)$ fcgi://127.0.0.1:{{cgi_port}}/var/www/html/{{os_user}}/www/$1 
+
+    DirectoryIndex /index.php index.php 
+
+
+    Redirect 301 / https://example.com/
+
+</VirtualHost> 
+
+
+
+<VirtualHost _default_:443>
+ ServerName {{hostname}}
+ DocumentRoot /var/www/html/{{os_user}}/www
+ ScriptAlias /cgi-bin/ "/var/www/cgi-bin/" 
+
+ErrorLog logs/ssl_error_log
+TransferLog logs/ssl_access_log
+LogLevel warn
+SSLEngine on
+SSLProtocol all -SSLv2 -SSLv3
+SSLCipherSuite HIGH:3DES:!aNULL:!MD5:!SEED:!IDEA
+SSLCertificateFile /etc/httpd/conf/ssl.crt/certificate.crt
+SSLCertificateKeyFile /etc/httpd/conf/ssl.key/key.crt
+SSLCertificateChainFile /etc/httpd/conf/ssl.bundle/certificate.bundle
+
+<Files ~ "\.(cgi|shtml|phtml|php3?)$">
+    SSLOptions +StdEnvVars
+</Files>
+<Directory "/var/www/cgi-bin">
+    SSLOptions +StdEnvVars
+</Directory>
+
+
+
+ <Directory "/var/www/html/{{os_user}}/www">
+
+            Options +Indexes +FollowSymLinks +ExecCGI
+
+            AddHandler php-fastcgi .php
+
+            Action php-fastcgi /cgi-bin/php.fastcgi
+
+            AllowOverride All
+
+            Order allow,deny
+
+            Allow from All
+
+ </Directory>
+
+
+
+
+BrowserMatch "MSIE [2-5]" \
+         nokeepalive ssl-unclean-shutdown \
+         downgrade-1.0 force-response-1.0
+
+#   Per-Server Logging:
+#   #   The home of a custom SSL log file. Use this when you want a
+#   #   compact non-error SSL logfile on a virtual host basis.
+CustomLog logs/ssl_request_log \
+             "%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %b"
+
+ProxyPassMatch ^/(.*\.php(/.*)?)$ fcgi://127.0.0.1:{{cgi_port}}/var/www/html/{{os_user}}/www/$1
+
+DirectoryIndex /index.php index.php
+
+
+
+</VirtualHost>
+
+

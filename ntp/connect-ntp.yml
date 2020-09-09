@@ -1,0 +1,24 @@
+---
+  - name: Playbook to connect host to ntp server and synchronize time
+    hosts: "{{ihosts}}"
+    tasks:
+      - name: Installing ntp service
+        yum:
+          name: ntp
+          state: present
+
+      - name: adding virtual host file
+        template:
+          src: /etc/ansible/playbooks/ntp/ntp.conf.j2
+          dest: /etc/ntp.conf
+
+      - name: timedatectl set-ntp true
+        command: timedatectl set-ntp true
+
+
+
+      - name: starting/enabling NTPD service
+        service:
+          name: ntpd
+          state: restarted
+          enabled: true

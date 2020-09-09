@@ -1,0 +1,7 @@
+ansible-playbook /etc/ansible/playbooks/vnc/install-vnc.yml -e "ihosts=<my host> vncpasswd=Mypassword vncuser=oracle" --ask-pass
+
+
+
+ihosts = target hosts
+vncpasswd = :)
+vncuser = the user that will perform vncpasswd

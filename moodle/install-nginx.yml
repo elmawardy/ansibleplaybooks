@@ -1,0 +1,31 @@
+- name: install epel
+  yum:
+    name: epel-release
+    state: present
+
+- name: install nginx
+  yum:
+    name: nginx
+    state: present
+
+- name: deploy moodle.conf
+  template:
+    src: moodle.conf
+    dest: /etc/nginx/conf.d/moodle.conf
+
+- name: enable port 80
+  firewalld:
+    port: 80/tcp
+    state: enabled
+    immediate: true
+    permanent: true
+
+- name: stop nginx
+  shell: systemctl kill nginx.service
+  ignore_errors: True
+
+- name: start nginx
+  systemd:
+    name: nginx
+    state: started
+

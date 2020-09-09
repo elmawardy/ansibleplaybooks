@@ -1,0 +1,93 @@
+---
+  - name: Play to install tomcat server
+    hosts: "{{hosts}}"
+    vars:
+      tomcat_directories:
+        - /opt/tomcat/conf/
+        - /opt/tomcat/logs/
+        - /opt/tomcat/temp/
+        - /opt/tomcat/webapps/
+        - /opt/tomcat/work/
+    tasks:
+
+
+      - name: Installing epel-release
+        yum:
+          name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+          state: present
+
+      - name: Installing java
+        yum:
+          name: java-1.8.0-openjdk
+          state: present
+
+
+      - name: adding group tomcat
+        group:
+          name: tomcat
+          state: present
+
+
+      - name: making /opt/tomcat
+        file:
+          state: directory
+          path: /opt/tomcat
+
+      - name: adding tomcat user
+        user:
+          name: tomcat
+          home: /opt/tomcat
+          group: tomcat
+          shell: /bin/nologin
+
+      - name: downloading tomcat
+        get_url:
+          url: https://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.47/bin/apache-tomcat-8.5.47.tar.gz
+          dest: /home/apache-tomcat-8.5.47.tar.gz
+
+
+      - name: unarchive tomcat tarball
+        unarchive:
+          src: /home/apache-tomcat-8.5.47.tar.gz
+          dest: /opt/tomcat
+          remote_src: yes
+          extra_opts: [--strip-components=1]
+          creates: "/opt/tomcat/conf"
+
+      - name: tomcat owner group
+        file:
+          state: directory
+          recurse: true
+          group: tomcat
+          mode: '0775'
+          path: /opt/tomcat
+
+      - name: chown -R tomcat logs temp webapps work
+        file:
+          state: directory
+          path: "{{ item }}"
+          recurse: true
+          owner: tomcat
+        loop: "{{ tomcat_directories }}"
+
+      - name: copy tomcat.service to /etc/systemd/system/
+        copy:
+          src: "/etc/ansible/playbooks/tomcat/tomcat.service"
+          dest: /etc/systemd/system/tomcat.service
+
+
+      - name: Installing haveged package
+        yum:
+          name: haveged
+          state: present
+
+      - name: Starting and enabling haveged & tomcat services
+        service:
+          name: "{{ item  }}"
+          state: started
+          enabled: true
+
+        loop:
+          - haveged
+          - tomcat
+

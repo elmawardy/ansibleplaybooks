@@ -1,0 +1,1 @@
+ansible-playbook /etc/ansible/playbooks/fcoe/configure-fcoe.yml -e "ihosts=<my host> NICs=['em3_1','em4_1']" --ask-pass

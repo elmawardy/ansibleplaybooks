@@ -1,0 +1,21 @@
+--- 
+  - name: Playbook to install Nginx and PHP-FPM web-server node to join moodle cluster and connect to a shared storage
+    hosts: "{{ihosts}}"
+    tasks:
+      - include_tasks: install-nginx.yml
+      - include_tasks: install-php.yml
+      - include_tasks: mount-gluster.yml
+    
+  - name: Add firewall rich rule to allow web server to DB
+    hosts: "{{dbHost}}"
+    tasks:
+      - name: Add permanent rich rule
+        firewalld:
+          permanent: yes
+          state: enabled
+          rich_rule: rule family="ipv4" source address="{{ihosts}}" port port=5432 protocol=tcp accept
+    
+      - name: restart firewalld
+        service:
+          name: firewalld
+          state: restarted

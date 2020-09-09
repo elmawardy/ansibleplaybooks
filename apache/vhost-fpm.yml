@@ -1,0 +1,23 @@
+---
+  - name: Playbook to deploy another Virtual Host and proxy to php fpm
+    hosts: "{{hosts}}"
+    tasks:
+      - name: copy php.fastcgi to /var/www/cgi-bin
+        copy:
+          src: /etc/ansible/playbooks/apache/php.fastcgi
+          dest: /var/www/cgi-bin
+
+      - name: setting proper permissions to php.fastcfgi
+        file:
+          state: file
+          owner: apache
+          group: apache
+          mode: '0755'
+          path: /var/www/cgi-bin/php.fastcgi
+
+      - name: adding virtual host file
+        template:
+          src: /etc/ansible/playbooks/apache/virtual-host.j2
+          dest: /etc/httpd/conf.d/{{hostname}}.conf
+
+

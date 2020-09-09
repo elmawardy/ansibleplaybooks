@@ -1,0 +1,19 @@
+- name: install epel
+  yum:
+    name: epel-release
+    state: present
+- name: install nginx
+  yum:
+    name: nginx
+    state: present
+- name: deploy site.conf
+  template:
+    src: site.conf
+    dest: /etc/nginx/conf.d/{{project_name}}.conf
+- name: stop nginx
+  shell: systemctl kill nginx.service
+  ignore_errors: true
+- name: start nginx
+  systemd:
+    name: nginx
+    state: started

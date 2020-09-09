@@ -1,0 +1,30 @@
+---
+  - name: playbook to install php fpm with specific version
+    hosts: "{{hosts}}"
+    tasks:
+      - name: installing php fpm packages
+        yum:
+          name: "{{item}}"
+          state: present
+        loop:
+          - php{{version}}
+          - php{{version}}-php-common
+          - php{{version}}-php-fpm
+          - php{{version}}-php-mysql
+          - php{{version}}-php-pecl-memcache
+          - php{{version}}-php-pecl-memcached
+          - php{{version}}-php-gd
+          - php{{version}}-php-mbstring
+          - php{{version}}-php-mcrypt
+          - php{{version}}-php-xml
+          - php{{version}}-php-pecl-apc
+          - php{{version}}-php-cli
+          - php{{version}}-php-pear
+          - php{{version}}-php-pdo
+
+      - name: starting and enabling fpm service
+        service:
+          state: started
+          enabled: true
+          name: php{{version}}-php-fpm
+

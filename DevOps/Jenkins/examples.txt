@@ -1,0 +1,5 @@
+ansible-playbook DevOps/Jenkins/install.yml -e "ihosts=<my ip>" --ask-pass
+
+
+
+ihosts = target hosts

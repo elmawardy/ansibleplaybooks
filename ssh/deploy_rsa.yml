@@ -1,0 +1,10 @@
+---
+  - name: Playbook to deploy the ansible ssh key
+    hosts: "{{hosts}}"
+    tasks:
+      - name: deploy the rsa
+        authorized_key:
+          user: root
+          state: present
+          key: "{{ item }}"
+        whith_file: ~/.ssh/id_rsa.pub

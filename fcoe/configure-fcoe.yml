@@ -1,0 +1,68 @@
+---
+  - name: Play to configure FCoE by providing the FCoE Enabled NICs to configure
+    hosts: "{{ihosts}}"
+    tasks:
+      - name: Check or Install fcoe-utils
+        yum:
+          name: fcoe-utils
+          state: present
+
+      - name: Check or Install lldpad
+        yum:
+          name: lldpad
+          state: present
+
+      - name: cp /etc/fcoe/cfg-ethx /etc/fcoe/cfg-<emx_x>
+        copy:
+          remote_src: true
+          src: /etc/fcoe/cfg-ethx
+          dest: /etc/fcoe/cfg-{{item}}
+
+        loop: "{{NICs}}"
+
+      - name: replace DCB_REQUIRED="yes" to DCB_REQUIRED="no"
+        lineinfile:
+          path: /etc/fcoe/cfg-{{item}}
+          regexp: '^DCB_REQUIRED="yes"'
+          line: 'DCB_REQUIRED="no"'
+
+        loop: "{{NICs}}"
+
+      - name: ONBOOT=yes
+        lineinfile:
+          path: /etc/sysconfig/network-scripts/ifcfg-{{item}}
+          regexp: '^ONBOOT=no'
+          line: 'ONBOOT=yes'
+        loop: "{{NICs}}"
+
+      - name: Check ONBOOT=yes
+        lineinfile:
+          state: present
+          path: /etc/sysconfig/network-scripts/ifcfg-{{item}}
+          line: 'ONBOOT=yes'
+        loop: "{{NICs}}"
+
+
+      - name: Start lldpad daemon
+        service:
+          name: lldpad
+          state: started
+          enabled: true
+
+      - name: dcbtool sc <NIC> dcb on
+        command:  dcbtool sc {{item}} dcb on
+        loop: "{{NICs}}"
+
+      - name:  enable FCoE on the network interface running
+        command: dcbtool sc {{item}} app:fcoe e:1
+        loop: "{{NICs}}"
+
+      - name: Start the network
+        command: ifup {{item}}
+        loop: "{{NICs}}"
+
+      - name: Start fcoe daemon
+        service:
+          name: fcoe
+          state: started
+          enabled: true

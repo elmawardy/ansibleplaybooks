@@ -1,0 +1,69 @@
+---
+#https://www.tecmint.com/install-and-configure-vnc-server-in-centos-7/
+  - name: Playbook to install vnc
+    hosts: "{{ihosts}}"
+    become: true
+    tasks:
+    - name: Install tigervnc server
+      yum:
+        name: tigervnc-server
+        state: present
+
+    - name: Installing epel-release
+      yum:
+        name: epel-release
+        state: present
+
+
+    - name: Install pip
+      yum:
+        name: python-pip
+        state: present
+
+
+    - name: install pexpect
+      pip:
+        name: pexpect
+
+
+    - name: vncpasswd
+      become_user: oracle
+      expect:
+        command: vncpasswd
+        responses:
+          'Password:': "{{vncpasswd}}"
+          'Verify:': "{{vncpasswd}}"
+          'Would you like to enter a view-only password \(y/n\)\?': 'n'
+        timeout: 300
+
+
+    - name: uploading /etc/systemd/system/vncserver@\:1.service
+      template:
+        src: /etc/ansible/playbooks/vnc/1.service.j2
+        dest: /etc/systemd/system/vncserver@:1.service
+        force: true
+
+
+    - name: systemctl daemon-reload
+      systemd:
+        daemon_reload: true
+
+    
+    - name: Open port 5901 on firewall
+      firewalld:
+        port: 5901/tcp
+        permanent: yes
+        state: enabled
+
+
+    - name: restart firewalld
+      service:
+        name: firewalld
+        state: restarted
+
+
+    - name: systemctl start/enable vncserver@:1
+      service:
+        name: vncserver@:1
+        state: started
+        enabled: true

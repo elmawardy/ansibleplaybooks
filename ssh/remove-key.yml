@@ -1,0 +1,17 @@
+---
+  - name: Playbook to remove public key from authorized_keys
+    hosts: "{{hosts}}"
+    tasks:
+      - name: removing file
+        lineinfile:
+          path: /root/.ssh/authorized_keys
+          line: "{{item}}"
+          state: absent
+        with_file: "{{key_path}}"
+#      - name: removing the key
+#        blockinfile:
+#          state: absent
+#          path: /root/.ssh/authorized_keys
+#          block: "{{item}}"
+#        with_file: "{{key_path}}"
+            

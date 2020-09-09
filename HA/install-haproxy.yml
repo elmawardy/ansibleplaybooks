@@ -1,0 +1,23 @@
+---
+  - name: Playbook to install HAProxy
+    hosts: "{{ihosts}}"
+    tasks:
+      - name: Installing ntp service
+        yum:
+          name: "{{item}}"
+          state: present
+        loop:
+          - rpm-build
+          - make
+          - gcc-c++
+          - openssl-devel
+          - pcre-devel
+
+
+
+      - name: downloading HAProxy
+        get_url:
+          url: https://www.haproxy.org/download/1.8/src/haproxy-1.8.1.tar.gz
+          dest: /root/haproxy-1.8.1.tar.gz
+
+

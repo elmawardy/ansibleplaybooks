@@ -1,0 +1,20 @@
+- name: Change file ownership, group and permissions
+  file:
+    path: "{{mountPath}}"
+    owner: nginx
+    group: nginx
+    mode: '0755'
+    state: directory
+
+- name: install glusterfs-fuse
+  yum:
+    name: glusterfs-fuse
+    state: present
+
+- name: Ensure fstab uses nodev
+  mount:
+    name: "{{mountPath}}"
+    src: "{{mountSource}}"
+    fstype: "glusterfs"
+    opts: "_netdev,backup-volfile-servers={{failoverServers}}"
+    state: mounted

@@ -1,0 +1,23 @@
+(deprecated)ansible-playbook /etc/ansible/playbooks/moodle/install-php.yml -e 'ihosts=<my ip> version=72 serverRamMBs=32768' --ask-pass
+(deprecated)ansible-playbook /etc/ansible/playbooks/moodle/deploy-node.yml -e 'ihosts=<my ip> version=72 serverRamMBs=32768 serverName=<elearning.example.com> serverRoot=/var/www/html/testmoodle/www moodleDataPath=/var/www/html/testmoodle/moodledata/' --ask-pass
+
+(deprecated)ansible-playbook /etc/ansible/playbooks/moodle/deploy-node.yml -e 'ihosts=<my host> version=72 serverRamMBs=1024 serverName=<elearning.example.com> serverRoot=/var/www/html/testmoodle/www moodleDataPath=/var/www/html/testmoodle/moodledata/ mountPath=/var/www/html/moodle mountSource=<gluster0>:/secondvol failoverServers=<gluster1>:<gluster2>' --ask-pass
+
+
+
+ansible-playbook /etc/ansible/playbooks/moodle/deploy-node.yml -e 'ihosts=<my ip> version=72 serverRamMBs=16384 serverName=<elearning.example.com> dbHost=<my ip> mountPath=/var/www/html/moodle mountSource=<mount ip>:moodle_replica_0 failoverServers=<failover ip 0>:<failover ip 1>' --ask-pass
+
+
+ansible-playbook /etc/ansible/playbooks/moodle/deploy-standalone.yml -e 'ihosts=<my host> version=72 serverRamMBs=32768 serverName=<elearning.example.com> serverRoot=/var/www/html/testmoodle/www moodleDataPath=/var/www/html/testmoodle/moodledata/' --ask-pass
+
+
+
+version = phpfpm version without dots
+serverRamMBs = Target server Total Rams , needed to calculate php parameters
+serverName = domain name
+(deprecated)serverRoot = moodle site root directory
+(deprecated)moodleDataPath = the absolute path for moodle data directory
+dbHost = the database host the node should be connected to (assuming postgresql)
+mountPath = glusterfs mount path
+mountSource = source of the mount (one of the gluster servers)
+failoverServers = another servers from the gluster cluster to failoverto when rebooted if the mountsource is down

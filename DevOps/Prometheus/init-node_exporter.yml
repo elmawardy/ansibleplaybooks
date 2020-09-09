@@ -1,0 +1,48 @@
+---
+- name: Deploy node_exporter on port 9100
+  hosts: "{{ihosts}}"
+  tasks:
+
+    - name: useradd --no-create-home -s /bin/false prometheus
+      user:
+        name: prometheus
+        shell: /bin/false
+        create_home: no
+
+    - name: Downloading node_exporter
+      get_url:
+        url: https://github.com/prometheus/node_exporter/releases/download/v0.18.1/node_exporter-0.18.1.linux-amd64.tar.gz
+        dest: /home/node_exporter-0.18.1.linux-amd64.tar.gz
+
+    - name: tar xvfz /home/node_exporter-*.*-amd64.tar.gz
+      unarchive:
+        src: /home/node_exporter-0.18.1.linux-amd64.tar.gz
+        dest: /home
+        remote_src: yes
+        creates: "/home/node_exporter-0.18.1.linux-amd64/node_exporter"
+
+
+    - name: mkdir -p /var/lib/prometheus/node_exporter
+      file:
+        state: directory
+        path: /var/lib/prometheus/node_exporter
+        owner: prometheus
+        group: prometheus
+
+
+    - name: mv /home/node_exporter-0.18.1.linux-amd64/* /var/lib/prometheus/node_exporter (No idempotent!!)
+      shell: mv /home/node_exporter-0.18.1.linux-amd64/* /var/lib/prometheus/node_exporter
+
+
+    - name: Upload node_exporter.service file
+      copy:
+        src: "/etc/ansible/playbooks/DevOps/Prometheus/node_exporter.service"
+        dest: /usr/lib/systemd/system/node_exporter.service
+
+
+    - name: systemctl daemon-reload
+      systemd:
+        name: node_exporter
+        state: started
+        daemon_reload: yes
+

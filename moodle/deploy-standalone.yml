@@ -1,0 +1,6 @@
+---
+  - name: Playbook to install Nginx and PHP-FPM web-server and deploy moodle
+    hosts: "{{ihosts}}"
+    tasks:
+      - include_tasks: install-nginx.yml
+      - include_tasks: install-php.yml
