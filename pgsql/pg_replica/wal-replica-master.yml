@@ -1,0 +1,53 @@
+---
+  - name: "Configure master for replication (sync)(WAL streaming)"
+    hosts: "{{master}}"
+    tasks:
+      - name: Verifying Tables exist in Image
+        become: true
+        become_user: postgres
+        command: psql -c "CREATE USER replica REPLICATION LOGIN ENCRYPTED PASSWORD 'replicauser@'";
+        ignore_errors: yes
+      - name: replace wal_level to hot_standby
+        lineinfile:
+          path: /var/lib/pgsql/11/data/postgresql.conf
+          regexp: '^#*wal_level = .+'
+          line: 'wal_level = hot_standby'
+      - name: archive_mode = on
+        lineinfile:
+          path: /var/lib/pgsql/11/data/postgresql.conf
+          regexp: '^#*archive_mode = .+'
+          line: 'archive_mode = on'
+      - name: archive_command = 'cp -i %p /var/lib/pgsql/11/data/archive/%f'
+        lineinfile:
+          path: /var/lib/pgsql/11/data/postgresql.conf
+          regexp: '^#*archive_command = .+'
+          line: "archive_command = 'cp -i %p /var/lib/pgsql/11/data/archive/%f'"
+      - name: max_wal_senders = 3
+        lineinfile:
+          path: /var/lib/pgsql/11/data/postgresql.conf
+          regexp: '^#*max_wal_senders = .+'
+          line: "max_wal_senders = 3"
+      - name: wal_keep_segments = 8
+        lineinfile:
+          path: /var/lib/pgsql/11/data/postgresql.conf
+          regexp: '^#*wal_keep_segments = .+'
+          line: "wal_keep_segments = 8"
+      - name: Change file ownership, group and permissions
+        file:
+          path: /var/lib/pgsql/11/data/archive
+          owner: postgres
+          group: postgres
+          mode: '0700'
+          state: directory
+      - name: add "host    replication     replica    <standby ip>/<netmask>            md5"  in pg_hba.conf
+        lineinfile:
+          path: /var/lib/pgsql/11/data/pg_hba.conf
+          line: "host    replication     replica      {{standby}}/{{netmask}}            md5"
+      - name: Make it sync replica
+        become: true
+        become_user: postgres
+        command: psql -c "ALTER SYSTEM SET synchronous_standby_names TO  '*'";
+      - name: restart postgresql
+        service: 
+          name: postgresql-11
+          state: restarted

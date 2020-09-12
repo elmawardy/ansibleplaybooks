@@ -1,0 +1,97 @@
+---
+  - name: "configure standby for replication (sync)(WAL streaming)"
+    hosts: "{{standby}}"
+    vars:
+      pip_install_packages:
+        - name: pexpect
+      pip_package: python-pip
+      pip_executable: pip
+    roles:
+      - geerlingguy.pip
+    tasks:
+      - name: register data directory
+        stat:
+          path: /var/lib/pgsql/11/data
+        register: datadir
+        #debugger: always
+      - name: register data_backup directory
+        stat:
+          path: /var/lib/pgsql/11/data_backup
+        register: bkdir
+        #debugger: always
+      - name: stop postgresql service
+        service:
+          name: postgresql-11
+          state: stopped
+        #debugger: always
+      - name: wal_level = hot_standby
+        lineinfile:
+          path: /var/lib/pgsql/11/data/postgresql.conf
+          regexp: '^#*wal_level = .+'
+          line: 'wal_level = hot_standby'
+        #debugger: always
+        when: datadir.stat.exists
+      - name: max_wal_senders = 3
+        lineinfile:
+          path: /var/lib/pgsql/11/data/postgresql.conf
+          regexp: '^#*max_wal_senders = .+'
+          line: "max_wal_senders = 3"
+        #debugger: always
+        when: datadir.stat.exists
+      - name: wal_keep_segments = 8
+        lineinfile:
+          path: /var/lib/pgsql/11/data/postgresql.conf
+          regexp: '^#*wal_keep_segments = .+'
+          line: "wal_keep_segments = 8"
+        when: datadir.stat.exists
+        #debugger: always
+      - name: hot_standby = on
+        lineinfile:
+          path: /var/lib/pgsql/11/data/postgresql.conf
+          regexp: '^#*hot_standby = .+'
+          line: "hot_standby = on"
+        when: datadir.stat.exists
+        #debugger: always
+      - name: remove data dir
+        file:
+          path: /var/lib/pgsql/11/data
+          state: absent
+        when: not bkdir.stat.exists
+        #debugger: always
+      - name: remove data directory
+        file:
+          path: /var/lib/pgsql/11/data
+          state: absent
+        #debugger: always
+      - name: pg_basebackup -h {{master}} -D /var/lib/pgsql/11/data -U replica -v -P
+        expect:
+          command: pg_basebackup -h {{master}} -D /var/lib/pgsql/11/data -U replica -v -P
+          responses:
+            (?i)Password: "replicauser@"
+          creates: /var/lib/pgsql/11/data
+        #debugger: always
+      - name: register data directory
+        stat:
+          path: /var/lib/pgsql/11/data
+        register: datadir
+        #debugger: always
+      - name: add recovery.conf
+        template:
+          src: recovery.conf
+          dest: /var/lib/pgsql/11/data/recovery.conf
+        when: datadir.stat.exists
+        #debugger: always
+      - name: data directory owned to postgres
+        file:
+          path: /var/lib/pgsql/11/data
+          state: directory
+          recurse: yes
+          owner: postgres
+          group: postgres
+          mode: 0700
+        #debugger: always
+      - name: start postgresql-11
+        service:
+          name: postgresql-11
+          state: started
+        #debugger: always
