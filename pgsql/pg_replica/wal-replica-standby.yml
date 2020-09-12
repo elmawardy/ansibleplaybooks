@@ -18,7 +18,15 @@
         stat:
           path: /var/lib/pgsql/11/data_backup
         register: bkdir
-        #debugger: always
+      - name: yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+        yum:
+          name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+          state: present
+      - name: install postgresql11-server
+        yum:
+          name: postgresql11-server
+          state: present
+       #debugger: always
       - name: stop postgresql service
         service:
           name: postgresql-11

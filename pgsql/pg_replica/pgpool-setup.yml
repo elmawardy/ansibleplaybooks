@@ -1,0 +1,24 @@
+---
+  - name: Setup pgpool-II with auto migrate select queries to standby server
+    hosts: "{{proxy}}"
+    tasks:
+      - name:   yum install https://www.pgpool.net/yum/rpms/4.1/redhat/rhel-7-x86_64/pgpool-II-release-4.1-2.noarch.rpm
+        yum:
+          name:  https://www.pgpool.net/yum/rpms/4.1/redhat/rhel-7-x86_64/pgpool-II-release-4.1-2.noarch.rpm
+          state: present
+      - name: Install pgpool-II-pg11 systemctl service
+        yum:
+          name:  pgpool-II-pg11
+          state: present
+      - name: Install pgpool-II-pg11-debuginfo yum package
+        yum:
+          name:  pgpool-II-pg11-debuginfo
+          state: present
+      - name: Install pgpool-II-pg11-devel systemctl service
+        yum:
+          name:  pgpool-II-pg11-devel
+          state: present
+      - name: Install pgpool-II-pg11-extensions systemctl service
+        yum:
+          name:  pgpool-II-pg11-extensions
+          state: present
