@@ -1,3 +1,4 @@
 ---
 - import_playbook: wal-replica-master.yml
 - import_playbook: wal-replica-standby.yml
+- import_playbook: pgpool-setup.yml

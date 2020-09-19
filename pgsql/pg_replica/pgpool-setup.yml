@@ -6,19 +6,48 @@
         yum:
           name:  https://www.pgpool.net/yum/rpms/4.1/redhat/rhel-7-x86_64/pgpool-II-release-4.1-2.noarch.rpm
           state: present
-      - name: Install pgpool-II-pg11 systemctl service
+#      - name: Install pgpool-II-pg11 systemctl service
+#        yum:
+#          name:  pgpool-II-pg11
+#          state: present
+#      - name: Install pgpool-II-pg11-debuginfo yum package
+#        yum:
+#          name:  pgpool-II-pg11-debuginfo
+#          state: present
+#      - name: Install pgpool-II-pg11-devel systemctl service
+#        yum:
+#          name:  pgpool-II-pg11-devel
+#          state: present
+#      - name: Install pgpool-II-pg11-extensions systemctl service
+#        yum:
+#          name:  pgpool-II-pg11-extensions
+#          state: present
+      - name: install pgpool-II-11.x86_64
         yum:
-          name:  pgpool-II-pg11
+          name: pgpool-II-pg11.x86_64
           state: present
-      - name: Install pgpool-II-pg11-debuginfo yum package
-        yum:
-          name:  pgpool-II-pg11-debuginfo
-          state: present
-      - name: Install pgpool-II-pg11-devel systemctl service
-        yum:
-          name:  pgpool-II-pg11-devel
-          state: present
-      - name: Install pgpool-II-pg11-extensions systemctl service
-        yum:
-          name:  pgpool-II-pg11-extensions
-          state: present
+      - name: add pgpool linux user
+        user:
+          name: pgpool
+          comment: pgpool-II user
+      - name: add pgpool.conf
+        template:
+          src: pgpool.conf
+          dest: /etc/pgpool-II/pgpool.conf
+      - name: add pool_passwd
+        template:
+          src: pool_passwd
+          dest: /etc/pgpool-II/pool_passwd
+      - name: add pool_hba.conf
+        template:
+          src: pool_hba.conf
+          dest: /etc/pgpool-II/pool_hba.conf
+      - name: add port 5432 in firewall
+        firewalld:
+          port: 5432/tcp
+          permanent: yes
+          state: enabled
+      - name: restart firewalld
+        service:
+          name: firewalld
+          state: restarted

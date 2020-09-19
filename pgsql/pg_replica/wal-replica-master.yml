@@ -44,6 +44,10 @@
           path: /var/lib/pgsql/11/data/postgresql.conf
           regexp: '^#*wal_keep_segments = .+'
           line: "wal_keep_segments = 8"
+      - name: allow md5 logins for remote machines in pg_hba.conf
+        lineinfile:
+          path: /var/lib/pgsql/11/data/pg_hba.conf
+          line: "host    all     all            {{proxy}}/{{netmask}}                 md5"
       - name: Change file ownership, group and permissions
         file:
           path: /var/lib/pgsql/11/data/archive
@@ -63,3 +67,25 @@
         service: 
           name: postgresql-11
           state: restarted
+
+      - name: Add permanent rich rule
+        firewalld:
+          permanent: yes
+          state: enabled
+          rich_rule: rule family="ipv4" source address="{{proxy}}" port port=5432 protocol=tcp accept
+
+      - name: allow access to proxy
+        firewalld:
+          permanent: yes
+          state: enabled
+          rich_rule: rule family="ipv4" source address="{{standby}}" port port=5432 protocol=tcp accept
+
+      - name: restart firewalld
+        service:
+          name: firewalld
+          state: stopped
+
+      - name: restart firewalld
+        service:
+          name: firewalld
+          state: started
