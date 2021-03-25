@@ -1,0 +1,10 @@
+---
+  - name: Play to Copy test plan artifacts like creds
+    hosts: "{{ihosts}}"
+    tasks:
+      - name: Install jdk
+        yum:
+          name: java-1.8.0-openjdk.x86_64
+          state: present
+      - name: Run the plan
+        shell: nohup /home/stresstest/apache-jmeter-5.4/bin/jmeter -n -t /home/stresstest/plan.jmx  &

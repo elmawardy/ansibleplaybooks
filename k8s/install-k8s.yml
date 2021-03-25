@@ -1,0 +1,4 @@
+--- 
+  - name: Playbook to install Kubernetes cluster on Centos 7
+    tasks:
+      - include_tasks: install-master-node.yml

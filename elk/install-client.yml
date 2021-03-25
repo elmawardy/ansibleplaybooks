@@ -1,0 +1,49 @@
+---
+  - name: Playbook to install filebeat and logstash to centos client
+    hosts: "{{ihosts}}"
+    tasks:
+      
+      - name: Adding Elasticsearch repo
+        command: "sudo rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch"
+    
+      - name: copy elasticsearch.repo
+        template:
+          src: elasticsearch.repo
+          dest: /etc/yum.repos.d/elasticsearch.repo
+
+      - name: Install jdk
+        yum:
+          name: java-1.8.0-openjdk.x86_64
+          state: present
+
+      - name: Installing filebeat
+        yum:
+          name: filebeat-7.11.2-1.x86_64
+          state: present
+
+      - name: Installing logstash
+        yum:
+          name: logstash
+          state: present
+
+      - name: copy logstash/conf.d/localhost.conf
+        template:
+          src: localhost.conf
+          dest: /etc/logstash/conf.d/localhost.conf
+
+      - name: copy filebeat/filebeat.yml
+        template:
+          src: filebeat.yml
+          dest: /etc/filebeat/filebeat.yml
+
+      - name: start and enable logstash
+        service:
+          name: logstash
+          state: restarted
+          enabled: true
+
+      - name: start and enable filebeat
+        service:
+          name: filebeat
+          state: restarted
+          enabled: true

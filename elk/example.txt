@@ -1,0 +1,1 @@
+ansible-playbook install-client.yml  -e 'ihosts=172.19.2.100' --ask-pass

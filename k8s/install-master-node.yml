@@ -1,0 +1,88 @@
+---
+  - name: Playbook to install kubernetes master
+    hosts: "{{master}}"
+    tasks:  
+      - name: install docker
+        yum:
+          name: docker
+          state: present
+
+      - name: copy kubernetes.repo file
+        template:
+          src: kubernetes.repo
+          dest: /etc/yum.repos.d/kubernetes.repo
+
+      - name: start docker service
+        service:
+          name: docker
+          state: started
+          enabled: true
+
+      - name: copy sysctl.d/k8s.conf
+        template:
+          src: sysctl/k8s.conf
+          dest: /etc/sysctl.d/k8s.conf
+
+      - name: reload sysctl
+        shell: sysctl --system
+
+      - name: disable selinux
+        lineinfile:
+          path: /etc/selinux/config
+          regexp: '^SELINUX=.+'
+          line: 'SELINUX=disabled'
+      - name: setenforce 0
+        shell: setenforce 0
+
+      - name: disable swap
+        shell: sudo sed -i '/swap/d' /etc/fstab; swapoff -a
+
+      - name: configure firewalld
+        firewalld:
+          permanent: yes
+          state: enabled
+          rich_rule: rule family="ipv4" source address="{{item[0]}}" port port="{{item[1]}}" protocol=tcp accept
+        with_nested: 
+          - "{{ minions }}"
+          - [ '6443','2379-2380','10250','10251','10252','10255' ]
+
+      - name: restart firewalld
+        systemd:
+          name: firewalld
+          state: restarted
+
+      - name: install conntrack and socat (k8s dependencies)
+        yum:
+          name: "{{item}}"
+          state: present
+        loop:
+          - conntrack
+          - socat
+
+      - name: install kubelet ,kubeadm and kubectl
+        yum:
+          name: "{{item}}"
+          state: present
+          disablerepo: "*"
+          enablerepo: "kubernetes"
+        loop:
+          - kubelet
+          - kubeadm
+          - kubectl
+
+      - name: adding existing user root to group sudo
+        user:
+          name: root
+          groups: dockerroot
+          append: yes
+
+      - name: install and start ntp
+        yum:
+          name: ntp
+          state: present
+
+      - name: start and enable ntp
+        systemd:
+          name: ntpd
+          state: started
+          enabled: true

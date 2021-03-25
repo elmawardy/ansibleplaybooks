@@ -1,0 +1,25 @@
+---
+  - name: Play to Copy test plan artifacts like creds
+    hosts: "{{ihosts}}"
+    tasks:
+      - name: Create /home/stresstest directory
+        file:
+          path: /home/stresstest
+          state: directory
+          mode: '0755'
+      - name: Copying creds.csv
+        copy:
+          src: ./creds-{{ansible_hostname}}.csv
+          dest: /home/stresstest/creds.csv
+
+      - name: Copying plan.jmx
+        copy:
+          src: ./plan.jmx
+          dest: /home/stresstest/plan.jmx
+ 
+      - name: Copying jmeter
+        copy:
+          src: ./apache-jmeter-5.4
+          dest: /home/stresstest/
+          mode: 755
+          force: no
